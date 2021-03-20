@@ -1,80 +1,77 @@
-# dummy-app-multi-versions
+# dummy-app
 
 ## Deploy multiple version dynamically with Helm
 
 Very simple python Flask application that has 2 deployment environments:
 
-- **dev** - deploy only one version that always overwrites the already installed one
-- **prod** - manage multiple versions
+- **dev** - deploy will deploy one pod
+- **prod** - deploy will deploy two pod
 
-## Set your configuration
-Set values in `helm-chart/dummy-app/values-dev.yaml` and `helm-chart/dummy-app/values-prod.yaml`:
-
-- DEV-REGISTRY/PROD-REGISTRY - your registries urls
-- DEV-CLUSTER-DNS-NAME/PROD-CLUSTER-DNS-NAME - your clusters DNS names
 
 ## Build
 Set environment variables:
 
 - `BUILD_NUMBER`, the default is 1
-- `REGISTRY_URL`, the default is empty
+- `REGISTRY_URL`, the default is localhost:5000
 Run build.sh to build and push docker images
 (Make sure you are logged in to your registry)
 
 ```
-export BUILD_NUMBER=4
-export REGISTRY_URL=myreg/
+export BUILD_NUMBER=1
+export REGISTRY_URL=localhost:5000
 ./build.sh
 ```
 
 ## Deployment
 
-### Install nginx controller
-
-```
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo add stable https://kubernetes-charts.storage.googleapis.com/
-helm repo update
-
-helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --set rbac.create=true --set controller.service.loadBalancerIP="<your external IP>" --set controller.service.ports.http="<your port>"
-```
 
 ### Deploy to dev
-
-Replace `VERSION_NAME` in `helm-chart/dummy-app/values-dev.yaml` with your full version name (like `1.0.4`)
 Run:
 ```
 cd helm-chart
-helm upgrade --install --cleanup-on-fail  -f dummy-app/values-dev.yaml dummy-app ./dummy-app
+helm install -f dummy-app/values-dev.yaml  helm-app ./dummy-app/
+OR
+helm upgrade --install --cleanup-on-fail  -f dummy-app/values-dev.yaml helm-app ./dummy-app
+```
+
+Port Forward:
+```
+kubectl port-forward service/dummy-app 5001:5000 -n <UsedNamespace>
 ```
 
 Call your service:
 ```
-http://<dev cluster DNS name>:5000
-```
-like
-```
-http://mydevserver:5000
+http://localhost:5001
 ```
 
 ### Deploy to prod
-Replace `VERSION_NAME` in `helm-chart/dummy-app/values-prod.yaml` with your full version name (like 1.0.4)
+
 Run:
 ```
 cd helm-chart
-helm upgrade --install --cleanup-on-fail  -f dummy-app/values-dev.yaml dummy-app-<version> ./dummy-app
+helm upgrade --install --cleanup-on-fail  -f dummy-app/values-prod.yaml helm-app ./dummy-app
 ```
-like
+
+Port Forward:
 ```
-cd helm-chart
-helm upgrade --install --cleanup-on-fail  -f dummy-app/values-dev.yaml dummy-app-1.0.4 ./dummy-app
+kubectl port-forward service/dummy-app 5001:5000 -n <UsedNamespace>
 ```
 
 Call your service:
 ```
-http://<dev cluster DNS name>:5000/v<version>
+http://localhost:5001
 ```
-like:
+
+### upgrade
+check history:
 ```
-http://myprodserver:5000/v1.0.4
+helm history helm-appp
+```
+Upgrade version and set replica count to 2:
+```
+helm upgrade -f dummy-app/values-dev.yaml  helm-app  ./dummy-app/ --set replicaCount=2
+```
+check history again:
+```
+helm history helm-appp
 ```

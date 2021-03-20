@@ -1,14 +1,15 @@
 
 name: dummy-app
 
+replicaCount: 2
+
 image:
-  repository: PROD-REGISTRY
+  repository: localhost:5000
   imageName: dummy-app
-  tag: VERSION_NAME
+  tag: 1.0.1
   pullPolicy: Always
 
 service:
-  loadBalancerIP: PROD-CLUSTER-DNS-NAME
   port: 5000
 
 environment: prod
