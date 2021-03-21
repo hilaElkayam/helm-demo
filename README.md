@@ -7,6 +7,7 @@ Very simple python Flask application that has 2 deployment environments:
 - **dev** - deploy will deploy one pod
 - **prod** - deploy will deploy two pod
 
+![Alt text](helm demo.jpeg?raw=true "Title")
 
 ## Build
 Set environment variables:
@@ -24,11 +25,20 @@ export REGISTRY_URL=localhost:5000
 
 ## Deployment
 
+### Prepare cluster
+```
+kubectl create namespace helm-demo
+```
+
+### Look at the template
+```
+helm template -f dummy-app/values-dev.yaml dummy-app/.
+```
 
 ### Deploy to dev
 Run:
 ```
-cd helm-chart
+cd helm
 helm install -f dummy-app/values-dev.yaml  helm-app ./dummy-app/
 OR
 helm upgrade --install --cleanup-on-fail  -f dummy-app/values-dev.yaml helm-app ./dummy-app
@@ -48,7 +58,7 @@ http://localhost:5001
 
 Run:
 ```
-cd helm-chart
+cd helm
 helm upgrade --install --cleanup-on-fail  -f dummy-app/values-prod.yaml helm-app ./dummy-app
 ```
 
@@ -65,7 +75,7 @@ http://localhost:5001
 ### upgrade
 check history:
 ```
-helm history helm-appp
+helm history helm-app
 ```
 Upgrade version and set replica count to 2:
 ```
